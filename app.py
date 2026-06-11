@@ -46,8 +46,8 @@ st.markdown("<p class='subtitle'>Valide seus dados abaixo para acessar os lança
 def carregar_base():
     nome_arquivo = "Boletos do dia.xlsx"
     if os.path.exists(nome_arquivo):
-        # Lê a planilha forçando o CPF como texto para evitar que remova os zeros à esquerda
-        df = pd.read_excel(nome_arquivo, dtype={'CNPJ/CPF': str})
+        # Lê a planilha forçando as colunas críticas como texto para não perder zeros ou quebrar formatos
+        df = pd.read_excel(nome_arquivo, dtype={'CNPJ/CPF': str, 'Linha Digitável (IPTE)': str})
         # Remove espaços em branco invisíveis no início ou fim dos títulos das colunas
         df.columns = df.columns.str.strip()
         return df
@@ -82,27 +82,53 @@ if df_base is not None:
                 responsavel_nome = df_cliente['Responsável'].iloc[0]
                 st.success(f"✅ Validação concluída! Olá, {responsavel_nome}. Seguem seus lançamentos abaixo:")
                 
-                # Cabeçalho customizado para a visualização das linhas
                 for idx, linha in df_cliente.iterrows():
-                    # Tratamento visual de moedas e datas
-                    valor_orig = f"R$ {linha['Valor Original']:.2f}".replace('.', ',') if pd.notnull(linha['Valor Original']) else "-"
-                    valor_atual = f"R$ {linha['Valor atualizado']:.2f}".replace('.', ',') if pd.notnull(linha['Valor atualizado']) else "-"
+                    # --- FORMATAÇÃO DE VALORES (Padrão R$ 1.236,25) ---
+                    if pd.notnull(linha['Valor Original']) and isinstance(linha['Valor Original'], (int, float)):
+                        valor_orig = f"R$ {linha['Valor Original']:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+                    else:
+                        valor_orig = f"R$ {linha['Valor Original']}".replace('.', ',') if pd.notnull(linha['Valor Original']) else "-"
+
+                    if pd.notnull(linha['Valor atualizado']) and isinstance(linha['Valor updated', 'Valor atualizado'], (int, float)):
+                        valor_atual = f"R$ {linha['Valor atualizado']:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+                    elif pd.notnull(linha['Valor atualizado']):
+                        valor_atual = f"R$ {linha['Valor atualizado']}".replace('.', ',')
+                    else:
+                        valor_atual = "-"
                     
+                    # --- FORMATAÇÃO DA DATA DE COMPETÊNCIA (DD/MM/AAAA) ---
+                    data_comp = linha['Mês de Competência']
+                    if isinstance(data_comp, pd.Timestamp):
+                        data_comp_formatada = data_comp.strftime('%d/%m/%Y')
+                    elif isinstance(data_comp, str):
+                        data_comp_formatada = data_comp  # Se já for texto na planilha, mantém
+                    else:
+                        data_comp_formatada = str(data_comp)
+
+                    # --- FORMATAÇÃO DA DATA DE VENCIMENTO ---
                     data_venc = linha['Data de Vencimento']
                     if isinstance(data_venc, pd.Timestamp):
                         data_venc = data_venc.strftime('%d/%m/%Y')
                     
-                    # Monta o nome dinâmico do arquivo baseado nas colunas: "Boleto - [Responsável] - [Histórico].pdf"
+                    # --- CÓDIGO DE BARRAS / LINHA DIGITÁVEL COMO TEXTO COMPLETO ---
+                    linha_digitavel = ""
+                    if pd.notnull(linha['Linha Digitável (IPTE)']):
+                        # Garante que o número seja tratado estritamente como texto puro, removendo pontos decimais indesejados (.0)
+                        linha_digitavel = str(linha['Linha Digitável (IPTE)']).strip()
+                        if linha_digitavel.endswith('.0'):
+                            linha_digitavel = linha_digitavel[:-2]
+                    
+                    # Monta o nome dinâmico do arquivo baseado nas colunas
                     nome_pdf_esperado = f"Boleto - {linha['Responsável']} - {linha['Histórico']}.pdf"
                     caminho_completo_pdf = os.path.join("boletos", nome_pdf_esperado)
                     
-                    # Estruturação da tabela em blocos colunados responsivos
+                    # Estruturação visual em blocos (tabela responsiva)
                     with st.container():
                         col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
                         
                         with col1:
                             st.markdown(f"**Histórico:** {linha['Histórico']}")
-                            st.markdown(f"**Competência:** {linha['Mês de Competência']}")
+                            st.markdown(f"**Competência:** {data_comp_formatada}")
                             st.caption(f"Unidade: {linha['UNIDADE']}")
                         with col2:
                             st.markdown(f"**Vencimento:** {data_venc}")
@@ -111,10 +137,10 @@ if df_base is not None:
                             st.markdown(f"**Valor Original:** {valor_orig}")
                             st.markdown(f"**Valor Atualizado:** {valor_atual}")
                         with col4:
-                            # Apresenta a linha digitável estruturada em caixa de código copiável
-                            if pd.notnull(linha['Linha Digitável (IPTE)']):
+                            # Apresenta a linha digitável estruturada em caixa de texto limpa e copiável
+                            if linha_digitavel:
                                 st.caption("Código de Barras (Linha Digitável):")
-                                st.code(linha['Linha Digitável (IPTE)'], language="text")
+                                st.code(linha_digitavel, language="text")
                             
                             # Validação se o arquivo de fato existe na pasta para liberar o botão de download
                             if os.path.exists(caminho_completo_pdf):
