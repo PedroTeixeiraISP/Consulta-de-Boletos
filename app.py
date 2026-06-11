@@ -10,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Estilização visual para tornar o portal profissional
+# Estilização visual para tornar o portal profissional e destacar o botão em verde
 st.markdown("""
     <style>
     .main-title {
@@ -34,6 +34,23 @@ st.markdown("""
         color: #10B981;
         text-decoration: none;
         font-weight: bold;
+    }
+    
+    /* --- DESTAQUE VERDE PARA O BOTÃO DE DOWNLOAD --- */
+    .stDownloadButton button {
+        background-color: #10B981 !important;
+        color: white !important;
+        border-radius: 8px !important;
+        border: none !important;
+        font-weight: bold !important;
+        padding: 0.5rem 1rem !important;
+        transition: background-color 0.3s ease !important;
+    }
+    
+    /* Efeito ao passar o mouse por cima do botão (Hover) */
+    .stDownloadButton button:hover {
+        background-color: #059669 !important;
+        color: white !important;
     }
     </style>
 """, unsafe_allow_html=True)
