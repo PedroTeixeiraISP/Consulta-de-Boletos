@@ -82,7 +82,8 @@ if df_base is not None:
                 responsavel_nome = df_cliente['Responsável'].iloc[0]
                 st.success(f"✅ Validação concluída! Olá, {responsavel_nome}. Seguem seus lançamentos abaixo:")
                 
-                # --- FORMATAÇÃO DE VALORES (Padrão R$ 1.236,25) ---
+                for idx, linha in df_cliente.iterrows():
+                    # --- FORMATAÇÃO DE VALORES (Padrão R$ 1.236,25) ---
                     if pd.notnull(linha['Valor Original']) and isinstance(linha['Valor Original'], (int, float)):
                         valor_orig = f"R$ {linha['Valor Original']:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
                     else:
@@ -100,7 +101,7 @@ if df_base is not None:
                     if isinstance(data_comp, pd.Timestamp):
                         data_comp_formatada = data_comp.strftime('%d/%m/%Y')
                     elif isinstance(data_comp, str):
-                        data_comp_formatada = data_comp  # Se já for texto na planilha, mantém
+                        data_comp_formatada = data_comp
                     else:
                         data_comp_formatada = str(data_comp)
 
@@ -112,7 +113,6 @@ if df_base is not None:
                     # --- CÓDIGO DE BARRAS / LINHA DIGITÁVEL COMO TEXTO COMPLETO ---
                     linha_digitavel = ""
                     if pd.notnull(linha['Linha Digitável (IPTE)']):
-                        # Garante que o número seja tratado estritamente como texto puro, removendo pontos decimais indesejados (.0)
                         linha_digitavel = str(linha['Linha Digitável (IPTE)']).strip()
                         if linha_digitavel.endswith('.0'):
                             linha_digitavel = linha_digitavel[:-2]
