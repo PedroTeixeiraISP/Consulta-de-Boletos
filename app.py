@@ -59,7 +59,6 @@ st.markdown("<h1 class='main-title'>📑 Portal de Consulta Financeira</h1>", un
 st.markdown("<p class='subtitle'>Valide seus dados abaixo para acessar os lançamentos em aberto e boletos.</p>", unsafe_allow_html=True)
 
 # 2. Função segura para carregar a base Excel
-@st.cache_data
 def carregar_base():
     nome_arquivo = "Boletos do dia.xlsx"
     if os.path.exists(nome_arquivo):
