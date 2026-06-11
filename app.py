@@ -134,14 +134,9 @@ if df_base is not None:
                             st.markdown(f"**Atraso:** {linha['Dias em Atraso']} dias")
                         with col3:
                             st.markdown(f"**Valor Original:** {valor_orig}")
-                            st.markdown(f"**Valor Atualizado:** {valor_atual}")
+                            st.markdown(f"**Valor Updated/Atualizado:** {valor_atual}")
                         with col4:
-                            # Apresenta a linha digitável estruturada em caixa de texto limpa e copiável
-                            if linha_digitavel:
-                                st.caption("Código de Barras (Linha Digitável):")
-                                st.code(linha_digitavel, language="text")
-                            
-                            # Validação se o arquivo de fato existe na pasta para liberar o botão de download
+                            # 1º: Validação e exibição do Botão de Download no topo da coluna (se o arquivo existir)
                             if os.path.exists(caminho_completo_pdf):
                                 with open(caminho_completo_pdf, "rb") as f:
                                     pdf_bytes = f.read()
@@ -152,8 +147,11 @@ if df_base is not None:
                                     mime="application/pdf",
                                     key=f"btn_{idx}"
                                 )
-                            else:
-                                st.error("⚠️ PDF do boleto pendente no sistema. Use o suporte abaixo.")
+                            
+                            # 2º: Apresenta a linha digitável estruturada logo abaixo do botão (se existir)
+                            if linha_digitavel:
+                                st.caption("Código de Barras (Linha Digitável):")
+                                st.code(linha_digitavel, language="text")
                                 
                     st.markdown("---")
             else:
