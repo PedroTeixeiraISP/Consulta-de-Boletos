@@ -82,14 +82,13 @@ if df_base is not None:
                 responsavel_nome = df_cliente['Responsável'].iloc[0]
                 st.success(f"✅ Validação concluída! Olá, {responsavel_nome}. Seguem seus lançamentos abaixo:")
                 
-                for idx, linha in df_cliente.iterrows():
-                    # --- FORMATAÇÃO DE VALORES (Padrão R$ 1.236,25) ---
+                # --- FORMATAÇÃO DE VALORES (Padrão R$ 1.236,25) ---
                     if pd.notnull(linha['Valor Original']) and isinstance(linha['Valor Original'], (int, float)):
                         valor_orig = f"R$ {linha['Valor Original']:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
                     else:
                         valor_orig = f"R$ {linha['Valor Original']}".replace('.', ',') if pd.notnull(linha['Valor Original']) else "-"
 
-                    if pd.notnull(linha['Valor atualizado']) and isinstance(linha['Valor updated', 'Valor atualizado'], (int, float)):
+                    if pd.notnull(linha['Valor atualizado']) and isinstance(linha['Valor atualizado'], (int, float)):
                         valor_atual = f"R$ {linha['Valor atualizado']:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
                     elif pd.notnull(linha['Valor atualizado']):
                         valor_atual = f"R$ {linha['Valor atualizado']}".replace('.', ',')
