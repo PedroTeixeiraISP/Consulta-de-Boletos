@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import os
 import re
-import gdown
 
 # 1. Configuração da página e layout do Portal
 st.set_page_config(
@@ -55,24 +54,17 @@ st.markdown("""
 st.markdown("<h1 class='main-title'>📑 Portal de Consulta Financeira</h1>", unsafe_allow_html=True)
 st.markdown("<p class='subtitle'>Valide seus dados abaixo para acessar os lançamentos em aberto e boletos.</p>", unsafe_allow_html=True)
 
-# =========================================================================
-# ⚠️ ADICIONE O ID DA SUA PASTA DO GOOGLE DRIVE AQUI ABAIXO:
-ID_PASTA_DRIVE = "1YZMgjx8nKtz4x5JkAOEHsIw5LRYEFkWG?hl=pt-br"
-# =========================================================================
+# Nome da pasta onde estão guardados os boletos baixados do Drive
+PASTA_BOLETOS = "boletos"
 
-# Função simples para buscar o boleto no Drive usando a ferramenta gdown
-def buscar_pdf_no_drive(nome_arquivo):
+# Nova função para buscar o PDF diretamente dentro da pasta no GitHub
+def buscar_pdf_local(nome_arquivo):
+    caminho_arquivo = os.path.join(PASTA_BOLETOS, nome_arquivo)
     try:
-        # Tenta baixar usando a URL de busca pública do gdown
-        url = f"https://drive.google.com/uc?id={ID_PASTA_DRIVE}"
-        # Usamos uma pasta temporária do sistema do Streamlit para testar o arquivo
-        caminho_temporario = gdown.download(id=None, url=f"https://drive.google.com/drive/folders/{ID_PASTA_DRIVE}", output=nome_arquivo, quiet=True, fuzzy=True)
-        
-        if os.path.exists(nome_arquivo):
-            with open(nome_arquivo, "rb") as f:
-                dados_pdf = f.read()
-            os.remove(nome_arquivo) # Limpa o arquivo temporário após ler
-            return dados_pdf
+        # Verifica se o arquivo físico existe na pasta boletos
+        if os.path.exists(caminho_arquivo):
+            with open(caminho_arquivo, "rb") as f:
+                return f.read()
     except Exception:
         return None
     return None
@@ -118,9 +110,9 @@ if df_base is not None:
                         valor_orig = f"R$ {linha['Valor Original']}".replace('.', ',') if pd.notnull(linha['Valor Original']) else "-"
 
                     if pd.notnull(linha['Valor atualizado']) and isinstance(linha['Valor atualizado'], (int, float)):
-                        valor_atual = f"R$ {linha['Valor atualizado']:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+                        valor_atual = f"R$ {linha['Valor updated', 'Valor atualizado'] if 'Valor updated' in df_base.columns else linha['Valor atualizado']:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
                     elif pd.notnull(linha['Valor atualizado']):
-                        valor_atual = f"R$ {linha['Valor atualizado']}".replace('.', ',')
+                        valor_atual = f"R$ {linha['Valor updated', 'Valor atualizado'] if 'Valor updated' in df_base.columns else linha['Valor atualizado']}".replace('.', ',')
                     else:
                         valor_atual = "-"
                     
@@ -141,8 +133,8 @@ if df_base is not None:
                     # Monta o nome dinâmico esperado do arquivo
                     nome_pdf_esperado = f"Boleto - {linha['Responsável']} - {linha['Histórico']}.pdf"
                     
-                    # Busca os bytes do PDF no Google Drive usando a ferramenta gdown
-                    pdf_bytes = buscar_pdf_no_drive(nome_pdf_esperado)
+                    # Busca os bytes do PDF diretamente nos arquivos locais do GitHub
+                    pdf_bytes = buscar_pdf_local(nome_pdf_esperado)
                     
                     # Estruturação visual
                     with st.container():
@@ -159,7 +151,7 @@ if df_base is not None:
                             st.markdown(f"**Valor Original:** {valor_orig}")
                             st.markdown(f"**Valor Atualizado:** {valor_atual}")
                         with col4:
-                            # Se encontrou o PDF no Google Drive, coloca o botão verde no topo
+                            # Se encontrou o PDF na pasta do repositório, coloca o botão verde na tela
                             if pdf_bytes is not None:
                                 st.download_button(
                                     label="📥 Baixar Boleto PDF",
@@ -168,6 +160,8 @@ if df_base is not None:
                                     mime="application/pdf",
                                     key=f"btn_{idx}"
                                 )
+                            else:
+                                st.caption("⚠️ Arquivo PDF deste boleto ainda não está disponível no servidor.")
                             
                             # Código de barras logo abaixo
                             if linha_digitavel:
